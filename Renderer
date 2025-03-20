@@ -1,0 +1,113 @@
+package com.example.mandelbrot;
+
+import android.opengl.GLES20;
+import android.opengl.GLSurfaceView;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+
+public class MandelbrotRenderer implements GLSurfaceView.Renderer {
+    private FloatBuffer vertexBuffer;
+    private int program;
+    private float[] vertices = {
+            -1.0f, 1.0f,
+            -1.0f, -1.0f,
+            1.0f, -1.0f,
+            1.0f, 1.0f
+    };
+
+    private float offsetX = 0.0f;
+    private float offsetY = 0.0f;
+    private float zoom = 1.0f;
+
+    private final String vertexShaderCode =
+            "attribute vec4 vPosition;" +
+                    "void main() {" +
+                    "  gl_Position = vPosition;" +
+                    "}";
+
+    private final String fragmentShaderCode =
+            "precision mediump float;" +
+                    "uniform float offsetX;" +
+                    "uniform float offsetY;" +
+                    "uniform float zoom;" +
+                    "void main() {" +
+                    "  float x0 = (gl_FragCoord.x / 720.0 - 0.5) * zoom + offsetX;" +
+                    "  float y0 = (gl_FragCoord.y / 1280.0 - 0.5) * zoom + offsetY;" +
+                    "  float x = 0.0;" +
+                    "  float y = 0.0;" +
+                    "  int iteration = 0;" +
+                    "  int max_iteration = 1000;" +
+                    "  while (x*x + y*y <= 4.0 && iteration < max_iteration) {" +
+                    "    float xtemp = x*x - y*y + x0;" +
+                    "    y = 2.0*x*y + y0;" +
+                    "    x = xtemp;" +
+                    "    iteration++;" +
+                    "  }" +
+                    "  float color = float(iteration) / float(max_iteration);" +
+                    "  gl_FragColor = vec4(color, color, color, 1.0);" +
+                    "}";
+
+    @Override
+    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        ByteBuffer bb = ByteBuffer.allocateDirect(vertices.length * 4);
+        bb.order(ByteOrder.nativeOrder());
+        vertexBuffer = bb.asFloatBuffer();
+        vertexBuffer.put(vertices);
+        vertexBuffer.position(0);
+
+        int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
+        int fragmentShader = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
+
+        program = GLES20.glCreateProgram();
+        GLES20.glAttachShader(program, vertexShader);
+        GLES20.glAttachShader(program, fragmentShader);
+        GLES20.glLinkProgram(program);
+    }
+
+    @Override
+    public void onDrawFrame(GL10 gl) {
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        GLES20.glUseProgram(program);
+
+        int positionHandle = GLES20.glGetAttribLocation(program, "vPosition");
+        GLES20.glEnableVertexAttribArray(positionHandle);
+        GLES20.glVertexAttribPointer(positionHandle, 2, GLES20.GL_FLOAT, false, 8, vertexBuffer);
+
+        int offsetXHandle = GLES20.glGetUniformLocation(program, "offsetX");
+        int offsetYHandle = GLES20.glGetUniformLocation(program, "offsetY");
+        int zoomHandle = GLES20.glGetUniformLocation(program, "zoom");
+
+        GLES20.glUniform1f(offsetXHandle, offsetX);
+        GLES20.glUniform1f(offsetYHandle, offsetY);
+        GLES20.glUniform1f(zoomHandle, zoom);
+
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, 4);
+        GLES20.glDisableVertexAttribArray(positionHandle);
+    }
+
+    @Override
+    public void onSurfaceChanged(GL10 gl, int width, int height) {
+        GLES20.glViewport(0, 0, width, height);
+    }
+
+    public void move(float dx, float dy) {
+        offsetX += dx * zoom / 720;
+        offsetY -= dy * zoom / 1280;
+    }
+
+    public void zoom(float factor) {
+        zoom *= factor;
+    }
+
+    private int loadShader(int type, String shaderCode) {
+        int shader = GLES20.glCreateShader(type);
+        GLES20.glShaderSource(shader, shaderCode);
+        GLES20.glCompileShader(shader);
+        return shader;
+    }
+}
