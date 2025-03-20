@@ -1,0 +1,66 @@
+package com.example.mandelbrot;
+
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MandelbrotActivity extends AppCompatActivity {
+
+    private MandelbrotGLSurfaceView mandelbrotView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_mandelbrot);
+        mandelbrotView = findViewById(R.id.mandelbrot_view);
+
+        Button moveLeftButton = findViewById(R.id.move_left_button);
+        moveLeftButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mandelbrotView.moveLeft();
+            }
+        });
+
+        Button moveRightButton = findViewById(R.id.move_right_button);
+        moveRightButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mandelbrotView.moveRight();
+            }
+        });
+
+        Button moveUpButton = findViewById(R.id.move_up_button);
+        moveUpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mandelbrotView.moveUp();
+            }
+        });
+
+        Button moveDownButton = findViewById(R.id.move_down_button);
+        moveDownButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mandelbrotView.moveDown();
+            }
+        });
+
+        Button zoomInButton = findViewById(R.id.zoom_in_button);
+        zoomInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mandelbrotView.zoomIn();
+            }
+        });
+
+        Button zoomOutButton = findViewById(R.id.zoom_out_button);
+        zoomOutButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mandelbrotView.zoomOut();
+            }
+        });
+    }
+}
