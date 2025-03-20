@@ -1,0 +1,86 @@
+package com.example.mandelbrot;
+
+import android.content.Context;
+import android.opengl.GLSurfaceView;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
+
+public class MandelbrotGLSurfaceView extends GLSurfaceView {
+    private final MandelbrotRenderer renderer;
+    private final ScaleGestureDetector scaleDetector;
+    private float lastTouchX, lastTouchY;
+
+    // Konstruktor wymagany do inicjalizacji z pliku XML
+    public MandelbrotGLSurfaceView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        setEGLContextClientVersion(2);
+        renderer = new MandelbrotRenderer();
+        setRenderer(renderer);
+
+        scaleDetector = new ScaleGestureDetector(context, new ScaleListener());
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        scaleDetector.onTouchEvent(event);
+
+        final int action = event.getAction();
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                lastTouchX = event.getX();
+                lastTouchY = event.getY();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (!scaleDetector.isInProgress()) {
+                    final float x = event.getX();
+                    final float y = event.getY();
+                    final float dx = x - lastTouchX;
+                    final float dy = y - lastTouchY;
+
+                    renderer.move(dx, dy);
+
+                    lastTouchX = x;
+                    lastTouchY = y;
+                }
+                break;
+        }
+
+        return true;
+    }
+
+    public void moveLeft() {
+        renderer.move(-30, 0);
+    }
+
+    public void moveRight() {
+        renderer.move(30, 0);
+    }
+
+    public void moveUp() {
+        renderer.move(0, -30);
+    }
+
+    public void moveDown() {
+        renderer.move(0, 30);
+    }
+
+    public void zoomIn() {
+        renderer.zoom(0.5f);
+    }
+
+    public void zoomOut() {
+        renderer.zoom(2.0f);
+    }
+
+    public void handleTouch(MotionEvent event) {
+    }
+
+    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        @Override
+        public boolean onScale(ScaleGestureDetector detector) {
+            renderer.zoom(detector.getScaleFactor());
+            return true;
+        }
+    }
+}
